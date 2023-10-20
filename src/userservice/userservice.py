@@ -27,7 +27,7 @@ def InsertUserInfo(username, password, gender, mail, birthdate, creationdate):
     hashed_password = hashlib.sha512((password + salt).encode('utf-8')).hexdigest()
     ExecuteQuery("INSERT INTO userInfo VALUES(0, %s, %s, %s, %s, %s, %s)",(username, hashed_password, gender, mail, birthdate, creationdate))
 
-#InsertUserInfo('hej1', 'hej2', 'det', 'hej1@hej2.com', '1999-12-03 12:31:00', '1999-12-03 12:31:00')
+InsertUserInfo('hej1', 'hej2', 'det', 'hej1@hej2.com', '1999-12-03 12:31:00', '1999-12-03 12:31:00')
 
 @app.post("/deleteUser/")
 def DeleteUser(userID):
@@ -54,4 +54,4 @@ def GetUser(userID):
     
     return data
 
-#pprint(GetUser(1))
+pprint(GetUser(1))
