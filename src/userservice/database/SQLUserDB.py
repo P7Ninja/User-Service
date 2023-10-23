@@ -108,6 +108,15 @@ class SQLUserDB(BaseUserDB):
             self.__db.rollback()
             return None
 
+    def validate_user(self, username: str, password: str) -> bool:
+        db_user = self.__db.query(model.User).where(model.User.username == username).first()
+        if db_user is None:
+            return False
+        
+        return bcrypt.checkpw(password.encode(), db_user.password)
+
+
+
     def __hash(self, password: str):
         return bcrypt.hashpw(
             password.encode(), 

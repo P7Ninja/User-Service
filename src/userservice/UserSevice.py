@@ -21,6 +21,7 @@ class UserService:
         self.__app.add_api_route("/user/{id}", self.delete_user, methods=["DELETE"], status_code=200)
         self.__app.add_api_route("/user/{id}", self.update_user, methods=["PUT"], status_code=200)
         self.__app.add_api_route("/user/{id}", self.get_user, methods=["GET"], status_code=200)
+        self.__app.add_api_route("/validate", self.validate_user, methods=["POST"], status_code=200)
         self.__app.add_api_route("/", lambda: {"message": "User-Service"}, methods=["GET"], status_code=200)
 
     async def create_user(self, user: schema.UserCreate)-> bool:
@@ -44,3 +45,6 @@ class UserService:
         if user is None:
             raise HTTPException(status_code=400, detail="No ID corresponding to user")
         return user
+    
+    async def validate_user(self, login: schema.Login) -> bool:
+        return self.__db.validate_user(login.username, login.password)

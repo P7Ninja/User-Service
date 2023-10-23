@@ -36,3 +36,7 @@ class UserUpdate(BaseModel):
     gender: Optional[str] = None
     birthday: Optional[date] = None
     target_energy: Optional[EnergyUpdate] = None
+
+class Login(BaseModel):
+    username: str
+    password: str
