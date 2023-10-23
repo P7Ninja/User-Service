@@ -12,7 +12,7 @@ class User(Base):
 
     username = Column(String(255), nullable=False, unique=True)
     password = Column(String(255), nullable=False)
-    email = Column(String, nullable=False)
+    email = Column(String(255), nullable=False)
     gender = Column(Enum("male", "female"), nullable=False)
     birthday = Column(Date, nullable=False)
     
