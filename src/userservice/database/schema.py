@@ -30,7 +30,6 @@ class EnergyUpdate(BaseModel):
     protein: Optional[float] = None
 
 class UserUpdate(BaseModel):
-    username: Optional[str] = None
     password: Optional[str] = None
     email: Optional[str] = None
     gender: Optional[str] = None

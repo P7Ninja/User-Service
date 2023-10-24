@@ -63,15 +63,19 @@ class SQLUserDB(BaseUserDB):
             return False
         return True
         
-    def update_user(self, user: schema.UserUpdate):
+    def update_user(self, id: int, user: schema.UserUpdate):
         try:
-            db_user = self.__db.query(model.User).where(model.User.username == user.username).first()
+            db_user = self.__db.query(model.User).where(model.User.id == id).first()
             if db_user is None:
                 return False
             user_dict = user.model_dump()
-            user_dict = {**user_dict, **user_dict["target_energy"]}
-            del user_dict["target_energy"]
+            if user_dict["target_energy"] is not None:
+                user_dict = {**user_dict, **user_dict["target_energy"]}
+                del user_dict["target_energy"]
             for k, v in user_dict.items():
+                if k == "password" and v is not None:
+                    setattr(db_user, k, self.__hash(v))
+                    continue
                 if v is None:
                     continue
                 setattr(db_user, k, v)

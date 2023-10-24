@@ -35,8 +35,8 @@ class UserService:
             raise HTTPException(status_code=400, detail="No ID corresponding to user")
         return True
     
-    async def update_user(self, user: schema.UserUpdate) -> bool:
-        if not self.__db.update_user(user):
+    async def update_user(self, id: int, user: schema.UserUpdate) -> bool:
+        if not self.__db.update_user(id, user):
             raise HTTPException(status_code=500, detail="Something went wrong!")
         return True
     
