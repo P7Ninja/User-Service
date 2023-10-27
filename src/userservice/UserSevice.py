@@ -24,27 +24,22 @@ class UserService:
         self.__app.add_api_route("/validate", self.validate_user, methods=["POST"], status_code=200)
         self.__app.add_api_route("/", lambda: {"message": "User-Service"}, methods=["GET"], status_code=200)
 
-    async def create_user(self, user: schema.UserCreate)-> bool:
-        res = self.__db.create_user(user)
-        if res is None:
-            raise HTTPException(status_code=500, detail="Something went wrong!")
-        return True
+    async def create_user(self, user: schema.UserCreate):
+        self.__db.create_user(user)
 
-    async def delete_user(self, id: int) -> bool:
-        if not self.__db.delete_user(id):
-            raise HTTPException(status_code=400, detail="No ID corresponding to user")
-        return True
+        return {"success":True}
+
+    async def delete_user(self, id: int):
+        self.__db.delete_user(id)
+        return {"success":True}
     
-    async def update_user(self, id: int, user: schema.UserUpdate) -> bool:
-        if not self.__db.update_user(id, user):
-            raise HTTPException(status_code=500, detail="Something went wrong!")
-        return True
+    async def update_user(self, id: int, user: schema.UserUpdate):
+        self.__db.update_user(id, user)
+        return {"success":True}
     
     async def get_user(self, id: int) -> schema.User:
-        user = self.__db.get_user(id)
-        if user is None:
-            raise HTTPException(status_code=400, detail="No ID corresponding to user")
-        return user
+        return self.__db.get_user(id)
     
-    async def validate_user(self, login: schema.Login) -> bool:
-        return self.__db.validate_user(login.username, login.password)
+    async def validate_user(self, login: schema.Login):
+        valid = self.__db.validate_user(login.username, login.password)
+        return {"success": valid}

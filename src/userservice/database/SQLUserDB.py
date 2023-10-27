@@ -5,6 +5,8 @@ from .BaseUserDB import BaseUserDB
 from .model import sql as model
 from . import schema
 import bcrypt
+from fastapi import HTTPException, status
+
 
 class SQLUserDB(BaseUserDB):
     def __init__(self, cfg: dict) -> None:
@@ -26,10 +28,13 @@ class SQLUserDB(BaseUserDB):
 
     def create_user(self, user: schema.UserCreate):
         try:
-            exists = self.__db.query(model.User).where(model.User.username == user.username).first()
+            exists = self.__db.query(model.User).filter(model.User.username == user.username).first()
             if exists is not None:
-                return None
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{user.username} already exists")
             
+            if user.gender not in ["male", "female"]:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{user.gender} is not a valid gender")
+
             db_user = model.User(
                 username = user.username,
                 password = self.__hash(user.password),
@@ -45,29 +50,26 @@ class SQLUserDB(BaseUserDB):
             self.__db.commit()
             self.__db.refresh(db_user)
         except SQLAlchemyError as e:
-            print(e)
             self.__db.rollback()
-            return None
-        return db_user.id
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e)
 
     def delete_user(self, id: int):
         try:
-            db_user = self.__db.query(model.User).where(model.User.id == id).first()
+            db_user = self.__db.query(model.User).filter(model.User.id == id).first()
             if db_user is None:
-                return False
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"no user with {id} exists")
             self.__db.delete(db_user)
             self.__db.commit()
         except SQLAlchemyError as e:
-            print(e)
             self.__db.rollback()
-            return False
-        return True
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e)
         
     def update_user(self, id: int, user: schema.UserUpdate):
         try:
-            db_user = self.__db.query(model.User).where(model.User.id == id).first()
+            db_user = self.__db.query(model.User).filter(model.User.id == id).first()
             if db_user is None:
-                return False
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"no user with {id} exists")
+            
             user_dict = user.model_dump()
             if user_dict["target_energy"] is not None:
                 user_dict = {**user_dict, **user_dict["target_energy"]}
@@ -80,17 +82,15 @@ class SQLUserDB(BaseUserDB):
                     continue
                 setattr(db_user, k, v)
             self.__db.commit()
-            return True
         except SQLAlchemyError as e:
-            print(e)
             self.__db.rollback()
-            return False
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e)
 
     def get_user(self, id: int):
         try:
-            db_user = self.__db.query(model.User).where(model.User.id == id).first()
+            db_user = self.__db.query(model.User).filter(model.User.id == id).first()
             if db_user is None:
-                return None
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"no user with {id} exists")
             
             return schema.User(
                 id = db_user.id,
@@ -108,12 +108,11 @@ class SQLUserDB(BaseUserDB):
             )
 
         except SQLAlchemyError as e:
-            print(e)
             self.__db.rollback()
-            return None
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e)
 
     def validate_user(self, username: str, password: str) -> bool:
-        db_user = self.__db.query(model.User).where(model.User.username == username).first()
+        db_user = self.__db.query(model.User).filter(model.User.username == username).first()
         if db_user is None:
             return False
         
