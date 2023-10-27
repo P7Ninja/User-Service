@@ -55,12 +55,13 @@ class SQLUserDB(BaseUserDB):
         except SQLAlchemyError as e:
             self.__db.rollback()
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e)
+        return db_user.id
 
     def delete_user(self, id: int):
         try:
             db_user = self.__db.query(model.User).filter(model.User.id == id).first()
             if db_user is None:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"no user with {id} exists")
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"no user with {id} exists")
             self.__db.delete(db_user)
             self.__db.commit()
         except SQLAlchemyError as e:
@@ -71,7 +72,7 @@ class SQLUserDB(BaseUserDB):
         try:
             db_user = self.__db.query(model.User).filter(model.User.id == id).first()
             if db_user is None:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"no user with {id} exists")
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"no user with {id} exists")
             
             user_dict = user.model_dump()
             if user_dict["target_energy"] is not None:
@@ -93,7 +94,7 @@ class SQLUserDB(BaseUserDB):
         try:
             db_user = self.__db.query(model.User).filter(model.User.id == id).first()
             if db_user is None:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"no user with {id} exists")
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"no user with {id} exists")
             
             return schema.User(
                 id = db_user.id,
@@ -114,12 +115,15 @@ class SQLUserDB(BaseUserDB):
             self.__db.rollback()
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e)
 
-    def validate_user(self, username: str, password: str) -> bool:
+    def validate_user(self, username: str, password: str) -> int | None:
+        exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"incorrect username or password")
         db_user = self.__db.query(model.User).filter(model.User.username == username).first()
         if db_user is None:
-            return False
-        
-        return bcrypt.checkpw(password.encode(), db_user.password)
+            raise exception
+        is_valid = bcrypt.checkpw(password.encode(), db_user.password)
+        if not is_valid:
+            raise exception
+        return db_user.id
 
 
 

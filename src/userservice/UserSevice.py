@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from .database import schema, BaseUserDB
 
 class UserService:
@@ -25,9 +25,8 @@ class UserService:
         self.__app.add_api_route("/", lambda: {"message": "User-Service"}, methods=["GET"], status_code=200)
 
     async def create_user(self, user: schema.UserCreate):
-        self.__db.create_user(user)
-
-        return {"success":True}
+        id = self.__db.create_user(user)
+        return {"success":True, "id": id}
 
     async def delete_user(self, id: int):
         self.__db.delete_user(id)
@@ -41,5 +40,5 @@ class UserService:
         return self.__db.get_user(id)
     
     async def validate_user(self, login: schema.Login):
-        valid = self.__db.validate_user(login.username, login.password)
-        return {"success": valid}
+        id = self.__db.validate_user(login.username, login.password)
+        return {"success": True, "id": id}
