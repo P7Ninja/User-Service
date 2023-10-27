@@ -6,7 +6,7 @@ from .model import sql as model
 from . import schema
 import bcrypt
 from fastapi import HTTPException, status
-
+import re
 
 class SQLUserDB(BaseUserDB):
     def __init__(self, cfg: dict) -> None:
@@ -34,6 +34,9 @@ class SQLUserDB(BaseUserDB):
             
             if user.gender not in ["male", "female"]:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{user.gender} is not a valid gender")
+
+            if not self.__validate_email(user.email):
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{user.email} is not a valid email")
 
             db_user = model.User(
                 username = user.username,
@@ -125,3 +128,6 @@ class SQLUserDB(BaseUserDB):
             password.encode(), 
             bcrypt.gensalt(rounds=self.cfg.get("SALT", 12))
             )
+    
+    def __validate_email(self, email: str):  
+        return re.match(r"[^@]+@[^@]+\.[^@]+", email) is not None 
