@@ -1,11 +1,12 @@
 
 from fastapi import FastAPI
-from dotenv import dotenv_values
 
 from userservice import UserService
 from userservice.database import SQLUserDB
 
-cfg = dotenv_values(".env")
+import os
+
+cfg = os.environ
 
 app = FastAPI()
 
