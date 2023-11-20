@@ -120,7 +120,7 @@ class SQLUserDB(BaseUserDB):
         db_user = self.__db.query(model.User).filter(model.User.username == username).first()
         if db_user is None:
             raise exception
-        is_valid = bcrypt.checkpw(password.encode(), db_user.password)
+        is_valid = bcrypt.checkpw(password.encode(), db_user.password.encode())
         if not is_valid:
             raise exception
         return db_user.id
