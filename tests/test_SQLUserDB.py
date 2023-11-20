@@ -6,6 +6,7 @@ from pathlib import Path
 from userservice.database import SQLUserDB
 from userservice.database.schema import *
 from datetime import date
+from fastapi import HTTPException
 
 @pytest.fixture
 def db(request: FixtureRequest, tmp_path: Path):
@@ -41,15 +42,17 @@ def test_delete_user(db: SQLUserDB):
     user = db.get_user(5)
     assert user is not None
     db.delete_user(5)
-    user = db.get_user(5)
-    assert user is None
+    with pytest.raises(HTTPException) as e:
+        user = db.get_user(5)
+    assert e.value.status_code == 404
 
 def test_update_user(db: SQLUserDB):
-    valid = db.validate_user("user3", "pass2")
-    assert valid == False
+    with pytest.raises(HTTPException) as e:
+        db.validate_user("user3", "pass2")
+    assert e.value.status_code == 401
     db.update_user(4, UserUpdate(password="pass2"))
-    valid = db.validate_user("user3", "pass2")
-    assert valid
+    id = db.validate_user("user3", "pass2")
+    assert id == 4
     
 def test_get_user(db: SQLUserDB):
     user = db.get_user(3)

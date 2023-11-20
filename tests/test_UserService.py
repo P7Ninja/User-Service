@@ -48,7 +48,7 @@ def test_create_user(client: TestClient):
 
 def test_delete_user(client: TestClient):
     res = client.delete("/user/5")
-    assert res.json()
+    assert res.json().get("success", False)
 
 def test_update_user(client: TestClient):
     res = client.put("/user/5", content=json.dumps({"email":"myemail@mail.com"}))
